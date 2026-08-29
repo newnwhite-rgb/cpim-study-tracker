@@ -1,47 +1,181 @@
-<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>CPIM Study Tracker</title>
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CPIM Study Dashboard</title>
 <style>
-body{font-family:Arial,'Noto Sans KR',sans-serif;background:#f4f6f8;color:#222;margin:0}.wrap{max-width:1400px;margin:auto;padding:24px}
-h1{margin:0 0 5px}.sub{color:#667085;margin-bottom:20px}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
-.card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:15px}.label{font-size:13px;color:#667085}.num{font-size:24px;font-weight:700;margin:6px 0}
-.bar{height:8px;background:#edf0f3;border-radius:99px;overflow:hidden;margin-top:9px}.fill{height:100%;background:#2563eb;width:0}.s{background:#f59e0b}.t{background:#7c3aed}.tm{background:#16a34a}
-.controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}.controls input,.controls select,.controls button{padding:10px;border:1px solid #d0d5dd;border-radius:8px;background:#fff;font-size:14px}
-.controls input{flex:1;min-width:260px}.table{background:#fff;border:1px solid #e5e7eb;border-radius:12px;overflow:auto}table{border-collapse:collapse;width:100%;min-width:980px}
-th,td{padding:10px;border-bottom:1px solid #eee;font-size:14px}th{background:#f9fafb;position:sticky;top:0;text-align:left}.c{text-align:center}.check{width:20px;height:20px}
-.done{background:#f4fff6}.foot{font-size:12px;color:#667085;margin-top:10px}@media(max-width:800px){.stats{grid-template-columns:1fr 1fr}}@media(max-width:500px){.stats{grid-template-columns:1fr}.wrap{padding:12px}}
-</style></head><body><div class="wrap">
-<h1>CPIM Study Tracker</h1><div class="sub">61강 수강 · Summary · Textbook 학습 진행률 관리</div>
-<div class="stats">
-<div class="card"><div class="label">수강 완료</div><div id="lc" class="num">0 / 61</div><div id="lp" class="label">0%</div><div class="bar"><div id="lb" class="fill"></div></div></div>
-<div class="card"><div class="label">수강 완료 시간</div><div id="tc" class="num">0분</div><div id="tp" class="label">0%</div><div class="bar"><div id="tb" class="fill tm"></div></div></div>
-<div class="card"><div class="label">Summary</div><div id="sc" class="num">0 / 61</div><div id="sp" class="label">0%</div><div class="bar"><div id="sb" class="fill s"></div></div></div>
-<div class="card"><div class="label">Textbook</div><div id="bc" class="num">0 / 61</div><div id="bp" class="label">0%</div><div class="bar"><div id="bb" class="fill t"></div></div></div>
+:root{
+  --bg:#f5f7fb;--card:#fff;--text:#1f2937;--muted:#667085;--line:#e5e7eb;
+  --blue:#2563eb;--green:#16a34a;--orange:#f59e0b;--purple:#7c3aed;--red:#dc2626;--soft:#eef2f7;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,Apple SD Gothic Neo,Noto Sans KR,Arial,sans-serif;background:var(--bg);color:var(--text)}
+.wrap{max-width:1480px;margin:0 auto;padding:24px}
+.header{display:flex;justify-content:space-between;gap:18px;align-items:flex-end;flex-wrap:wrap;margin-bottom:18px}
+h1{margin:0;font-size:30px}.sub{color:var(--muted);margin-top:5px}
+.target{background:#111827;color:#fff;padding:12px 16px;border-radius:12px;min-width:220px}
+.target .small{font-size:12px;opacity:.75}.target .big{font-size:24px;font-weight:800;margin-top:3px}
+.grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;margin-bottom:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:15px}
+.label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.num{font-size:24px;font-weight:800;margin:6px 0 2px}.detail{font-size:12px;color:var(--muted)}
+.bar{height:8px;background:#edf0f3;border-radius:99px;overflow:hidden;margin-top:10px}.fill{height:100%;width:0;background:var(--blue)}
+.green{background:var(--green)}.orange{background:var(--orange)}.purple{background:var(--purple)}
+.section{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+.section-title{font-size:16px;font-weight:800;margin-bottom:12px}
+.pace-grid{display:grid;grid-template-columns:1.25fr 1fr 1fr 1fr;gap:12px;align-items:stretch}
+.pace-main{padding:14px;border-radius:12px;background:#f8fafc;border:1px solid var(--line)}
+.pace-row{display:flex;justify-content:space-between;gap:12px;margin-bottom:8px;font-size:14px}
+.pace-meter{position:relative;height:16px;background:#edf0f3;border-radius:99px;overflow:hidden}
+.pace-meter .actual{height:100%;background:var(--blue);width:0}
+.pace-meter .goal{position:absolute;top:0;bottom:0;width:3px;background:#111827}
+.metric{padding:14px;border-radius:12px;background:#f8fafc;border:1px solid var(--line)}
+.metric .mnum{font-size:22px;font-weight:800;margin-top:6px}
+.controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.controls input,.controls select,.controls button{padding:10px 12px;border:1px solid #d0d5dd;border-radius:9px;background:#fff;font-size:14px}
+.controls input[type="search"]{flex:1;min-width:260px}
+.controls input[type="number"]{width:110px}
+button{cursor:pointer}button:hover{background:#f8fafc}
+.table{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:auto}
+table{border-collapse:collapse;width:100%;min-width:1100px}
+th,td{padding:10px 11px;border-bottom:1px solid #eee;font-size:14px;vertical-align:middle}
+th{background:#f9fafb;position:sticky;top:0;text-align:left;z-index:2}
+.c{text-align:center}.check{width:20px;height:20px;cursor:pointer;accent-color:var(--blue)}
+.done{background:#f4fff6}
+.todaybox{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.todaybox input{width:90px}
+.positive{color:var(--green)}.negative{color:var(--red)}
+.foot{font-size:12px;color:var(--muted);margin-top:10px}
+@media(max-width:1100px){.grid{grid-template-columns:repeat(3,1fr)}.pace-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:700px){.wrap{padding:14px}.grid{grid-template-columns:1fr 1fr}.pace-grid{grid-template-columns:1fr}}
+@media(max-width:480px){.grid{grid-template-columns:1fr}h1{font-size:24px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <div>
+      <h1>CPIM Study Dashboard</h1>
+      <div class="sub">61강 수강 · Summary · Textbook · 공부시간 통합 관리</div>
+    </div>
+    <div class="target">
+      <div class="small">인강 완주 목표일</div>
+      <div class="big">2026.11.01 · <span id="dday">D-</span></div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="card"><div class="label">Overall Progress</div><div id="overall" class="num">0.0%</div><div class="detail">Lecture + Summary + Textbook 평균</div><div class="bar"><div id="overallBar" class="fill"></div></div></div>
+    <div class="card"><div class="label">Lecture</div><div id="lectureCount" class="num">0 / 61</div><div id="lecturePct" class="detail">0.0%</div><div class="bar"><div id="lectureBar" class="fill"></div></div></div>
+    <div class="card"><div class="label">Lecture Time</div><div id="timeCount" class="num">0분</div><div id="timePct" class="detail">0.0%</div><div class="bar"><div id="timeBar" class="fill green"></div></div></div>
+    <div class="card"><div class="label">Summary</div><div id="summaryCount" class="num">0 / 61</div><div id="summaryPct" class="detail">0.0%</div><div class="bar"><div id="summaryBar" class="fill orange"></div></div></div>
+    <div class="card"><div class="label">Textbook</div><div id="textbookCount" class="num">0 / 61</div><div id="textbookPct" class="detail">0.0%</div><div class="bar"><div id="textbookBar" class="fill purple"></div></div></div>
+    <div class="card"><div class="label">Today Study</div><div id="todayStudy" class="num">0분</div><div id="weekStudy" class="detail">최근 7일 0분</div></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Study Pace</div>
+    <div class="pace-grid">
+      <div class="pace-main">
+        <div class="pace-row"><span>현재 강의시간 진도</span><strong id="actualPace">0.0%</strong></div>
+        <div class="pace-row"><span>오늘 목표 진도</span><strong id="goalPace">0.0%</strong></div>
+        <div class="pace-meter"><div id="actualMeter" class="actual"></div><div id="goalMarker" class="goal"></div></div>
+        <div class="detail" style="margin-top:8px">목표선은 최초 사용일부터 2026.11.01까지 선형 기준으로 계산됩니다.</div>
+      </div>
+      <div class="metric"><div class="label">목표 대비</div><div id="gapMetric" class="mnum">0.0%p</div><div id="gapText" class="detail">현재 목표선과 동일</div></div>
+      <div class="metric"><div class="label">남은 강의시간</div><div id="remainTime" class="mnum">0분</div><div id="dailyNeed" class="detail">하루 평균 0분 필요</div></div>
+      <div class="metric"><div class="label">남은 강의</div><div id="remainLectures" class="mnum">61강</div><div id="weeklyNeed" class="detail">주당 0강 필요</div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">오늘 공부시간 기록</div>
+    <div class="todaybox">
+      <span>오늘 공부한 시간</span>
+      <input id="studyMinutes" type="number" min="0" max="1440" step="5" value="0">
+      <span>분</span>
+      <button id="saveStudy">오늘 기록 저장</button>
+      <span class="detail">날짜별로 저장되어 오늘/최근 7일 합계를 자동 계산합니다.</span>
+    </div>
+  </div>
+
+  <div class="controls">
+    <input id="q" type="search" placeholder="강좌 검색 (예: Inventory, MRP, Demand)">
+    <select id="cat"><option value="all">전체</option><option>개론</option><option>Wrap-up</option><option>실전 문제풀이</option></select>
+    <select id="st"><option value="all">전체 상태</option><option value="incomplete">수강 미완료</option><option value="lecture">수강 완료</option><option value="all3">3종 모두 완료</option></select>
+    <button id="backup">백업 저장</button><button id="restore">백업 불러오기</button><button id="reset">전체 초기화</button>
+    <input id="file" type="file" accept=".json" hidden>
+  </div>
+
+  <div class="table">
+    <table>
+      <thead><tr><th class="c">No.</th><th>구분</th><th>강좌명</th><th class="c">시간</th><th class="c">강의 수강</th><th class="c">Summary</th><th class="c">Textbook</th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+  <div class="foot">체크 및 공부시간은 현재 브라우저에 자동 저장됩니다. 다른 기기에서는 백업 저장/불러오기를 사용하세요.</div>
 </div>
-<div class="controls"><input id="q" placeholder="강좌 검색"><select id="cat"><option value="all">전체</option><option>개론</option><option>Wrap-up</option><option>실전 문제풀이</option></select>
-<select id="st"><option value="all">전체 상태</option><option value="incomplete">수강 미완료</option><option value="lecture">수강 완료</option><option value="all3">3종 모두 완료</option></select>
-<button id="backup">백업 저장</button><button id="restore">백업 불러오기</button><button id="reset">전체 초기화</button><input id="file" type="file" accept=".json" hidden></div>
-<div class="table"><table><thead><tr><th class="c">No.</th><th>구분</th><th>강좌명</th><th class="c">시간</th><th class="c">강의 수강</th><th class="c">Summary</th><th class="c">Textbook</th></tr></thead><tbody id="rows"></tbody></table></div>
-<div class="foot">체크 상태는 현재 브라우저에 자동 저장됩니다. 다른 PC에서는 백업 저장/불러오기를 사용하세요.</div>
-</div><script>
+
+<script>
 const courses=[{"id": 1, "category": "개론", "title": "[CP9] 0. Introduction to CPIM Class", "minutes": 60}, {"id": 2, "category": "개론", "title": "[CP9] 0. How to register CPIM exam", "minutes": 9}, {"id": 3, "category": "개론", "title": "[CP9] 1. Overview of Supply Chain Structure - Introduction to SCM (1/2)", "minutes": 55}, {"id": 4, "category": "개론", "title": "[CP9] 2. Overview of Supply Chain Structure - Introduction to SCM (2/2)", "minutes": 55}, {"id": 5, "category": "개론", "title": "[CP9] 3. Overview of Supply Chain Structure - MPCS, Innovation of Manufacturing", "minutes": 92}, {"id": 6, "category": "개론", "title": "[CP9] 4. Overview of Supply Chain Structure - Manufacturing Environment, Review of Textbook", "minutes": 60}, {"id": 7, "category": "개론", "title": "[CP9] 5. Overview of Supply Chain Structure - Review of Textbook (MPCS)", "minutes": 70}, {"id": 8, "category": "개론", "title": "[CP9] 6. Overview of Supply Chain Structure - Solve Review Questions", "minutes": 37}, {"id": 9, "category": "개론", "title": "[CP9] 7. Developing Sustainable Strategy (1/2)", "minutes": 83}, {"id": 10, "category": "개론", "title": "[CP9] 8. Developing Sustainable Strategy (2/2) - Review Textbook & Solve Review Questions", "minutes": 71}, {"id": 11, "category": "개론", "title": "[CP9] 9. Sustainability", "minutes": 102}, {"id": 12, "category": "개론", "title": "[CP9] 10. Financial Analysis & Technique (1/3)", "minutes": 55}, {"id": 13, "category": "개론", "title": "[CP9] 11. Financial Analysis & Technique (2/3)", "minutes": 48}, {"id": 14, "category": "개론", "title": "[CP9] 12. Financial Analysis & Technique (3/3) - Review Textbook & Solve Review Questions", "minutes": 50}, {"id": 15, "category": "개론", "title": "[CP9] 13. Operation Performance (1/4)", "minutes": 49}, {"id": 16, "category": "개론", "title": "[CP9] 14. Operation Performance (2/4)", "minutes": 36}, {"id": 17, "category": "개론", "title": "[CP9] 15. Operation Performance (3/4) - Review Textbook", "minutes": 76}, {"id": 18, "category": "개론", "title": "[CP9] 16. Operation Performance (4/4) - Solve Review Questions", "minutes": 36}, {"id": 19, "category": "개론", "title": "[CP9] 17. Infrastructure (1/2)", "minutes": 64}, {"id": 20, "category": "개론", "title": "[CP9] 18. Infrastructure (2/2) - Review Textbook & Solve Review Questions", "minutes": 38}, {"id": 21, "category": "개론", "title": "[CP9] 19. Demand Management Process", "minutes": 55}, {"id": 22, "category": "개론", "title": "[CP9] 20. Demand Forecasting & Customer Management", "minutes": 62}, {"id": 23, "category": "개론", "title": "[CP9] 21. Demand Management - Review Textbook (1/2)", "minutes": 71}, {"id": 24, "category": "개론", "title": "[CP9] 22. Demand Management - Review Textbook (2/2)", "minutes": 46}, {"id": 25, "category": "개론", "title": "[CP9] 23. Demand Management - Solve Review Questions", "minutes": 33}, {"id": 26, "category": "개론", "title": "[CP9] 24. Sales and Operations Plan (1/2)", "minutes": 46}, {"id": 27, "category": "개론", "title": "[CP9] 25. Sales and Operations Plan (2/2) - Review Textbook & Solve Review Questions", "minutes": 73}, {"id": 28, "category": "개론", "title": "[CP9] 26. Master Scheduling (1/2)", "minutes": 86}, {"id": 29, "category": "개론", "title": "[CP9] 27. Master Scheduling (2/2) - Review Textbook & Solve Review Questions", "minutes": 88}, {"id": 30, "category": "개론", "title": "[CP9] 28. Material Requirements Planning", "minutes": 82}, {"id": 31, "category": "개론", "title": "[CP9] 29. Capacity Management", "minutes": 93}, {"id": 32, "category": "개론", "title": "[CP9] 30. Strategic Sourcing (1/2)", "minutes": 44}, {"id": 33, "category": "개론", "title": "[CP9] 31. Strategic Sourcing (2/2) - Review Textbook & Solve Review Questions", "minutes": 58}, {"id": 34, "category": "개론", "title": "[CP9] 32. Inventory Management (1/3)", "minutes": 72}, {"id": 35, "category": "개론", "title": "[CP9] 33. Inventory Management (2/3) - Review Textbook (1/2)", "minutes": 44}, {"id": 36, "category": "개론", "title": "[CP9] 34. Inventory Management (3/3) - Review Textbook (2/2) & Solve Review Questions", "minutes": 51}, {"id": 37, "category": "개론", "title": "[CP9] 35. Distribution Planning", "minutes": 84}, {"id": 38, "category": "개론", "title": "[CP9] 36. Production Activity Control", "minutes": 86}, {"id": 39, "category": "개론", "title": "[CP9] 37. Scheduling (1/2)", "minutes": 41}, {"id": 40, "category": "개론", "title": "[CP9] 38. Scheduling (2/2) - Review Textbook & Solve Review Questions", "minutes": 54}, {"id": 41, "category": "개론", "title": "[CP9] 39. Quality Management", "minutes": 70}, {"id": 42, "category": "개론", "title": "[CP9] 40. Service Design, Project Management and Technology", "minutes": 63}, {"id": 43, "category": "Wrap-up", "title": "[CP9W] 1. Wrap up (1/4)", "minutes": 66}, {"id": 44, "category": "Wrap-up", "title": "[CP9W] 2. Wrap up (2/4)", "minutes": 69}, {"id": 45, "category": "Wrap-up", "title": "[CP9W] 3. Wrap up (3/4)", "minutes": 36}, {"id": 46, "category": "Wrap-up", "title": "[CP9W] 4. Wrap up (4/4)", "minutes": 47}, {"id": 47, "category": "실전 문제풀이", "title": "[CP9S] 0. Study Material Download (Wrapup + 문제풀이)", "minutes": 1}, {"id": 48, "category": "실전 문제풀이", "title": "[CP9S] 1. Supply Chain Overview", "minutes": 65}, {"id": 49, "category": "실전 문제풀이", "title": "[CP9S] 2. Develop Strategy (1/2)", "minutes": 63}, {"id": 50, "category": "실전 문제풀이", "title": "[CP9S] 3. Develop Strategy (2/2)", "minutes": 79}, {"id": 51, "category": "실전 문제풀이", "title": "[CP9S] 4. Demand Management & SOP (1/2)", "minutes": 67}, {"id": 52, "category": "실전 문제풀이", "title": "[CP9S] 5. Demand Management & SOP (2/2)", "minutes": 74}, {"id": 53, "category": "실전 문제풀이", "title": "[CP9S] 6. MPS, MRP, Capacity Management (1/2)", "minutes": 50}, {"id": 54, "category": "실전 문제풀이", "title": "[CP9S] 7. MPS, MRP, Capacity Management (2/2)", "minutes": 59}, {"id": 55, "category": "실전 문제풀이", "title": "[CP9S] 8. Inventory Management & DRP", "minutes": 81}, {"id": 56, "category": "실전 문제풀이", "title": "[CP9S] 9. Purchasing and Cost Analysis", "minutes": 67}, {"id": 57, "category": "실전 문제풀이", "title": "[CP9S] 10. Execution & Quality Management", "minutes": 74}, {"id": 58, "category": "실전 문제풀이", "title": "[CP9S] 11. Final 100 Questions (Series A) (1/2)", "minutes": 55}, {"id": 59, "category": "실전 문제풀이", "title": "[CP9S] 12. Final 100 Questions (Series A) (2/2)", "minutes": 47}, {"id": 60, "category": "실전 문제풀이", "title": "[CP9S] 13. Final 150 Questions (Series B) (1/2)", "minutes": 76}, {"id": 61, "category": "실전 문제풀이", "title": "[CP9S] 14. Final 150 Questions (Series B) (2/2)", "minutes": 54}];
-const key='cpimTrackerV1';let state={};try{state=JSON.parse(localStorage.getItem(key)||'{}')}catch(e){}
-function s(id){if(!state[id])state[id]={lecture:false,summary:false,textbook:false};return state[id]}
-function save(){localStorage.setItem(key,JSON.stringify(state))}
-function fmt(m){let h=Math.floor(m/60),r=m%60;return h?`${h}시간 ${r}분`:`${r}분`}
-function stats(){let l=0,sm=0,b=0,min=0,total=courses.reduce((a,x)=>a+x.minutes,0);courses.forEach(x=>{let z=s(x.id);if(z.lecture){l++;min+=x.minutes}if(z.summary)sm++;if(z.textbook)b++});
-let p=n=>n/courses.length*100,pt=min/total*100;
-lc.textContent=`${l} / ${courses.length}`;lp.textContent=p(l).toFixed(1)+'%';lb.style.width=p(l)+'%';
-tc.textContent=fmt(min);tp.textContent=`총 ${fmt(total)} 중 ${pt.toFixed(1)}%`;tb.style.width=pt+'%';
-sc.textContent=`${sm} / ${courses.length}`;sp.textContent=p(sm).toFixed(1)+'%';sb.style.width=p(sm)+'%';
-bc.textContent=`${b} / ${courses.length}`;bp.textContent=p(b).toFixed(1)+'%';bb.style.width=p(b)+'%'}
-function render(){let qq=q.value.toLowerCase().trim(),cc=cat.value,ss=st.value;rows.innerHTML='';
-courses.filter(x=>{let z=s(x.id),ok=!qq||x.title.toLowerCase().includes(qq);ok=ok&&(cc==='all'||x.category===cc);if(ss==='incomplete')ok=ok&&!z.lecture;if(ss==='lecture')ok=ok&&z.lecture;if(ss==='all3')ok=ok&&z.lecture&&z.summary&&z.textbook;return ok})
-.forEach(x=>{let z=s(x.id),tr=document.createElement('tr');if(z.lecture&&z.summary&&z.textbook)tr.className='done';tr.innerHTML=`<td class=c>${x.id}</td><td>${x.category}</td><td>${x.title}</td><td class=c>${fmt(x.minutes)}</td>
-<td class=c><input class=check type=checkbox data-id=${x.id} data-k=lecture ${z.lecture?'checked':''}></td><td class=c><input class=check type=checkbox data-id=${x.id} data-k=summary ${z.summary?'checked':''}></td><td class=c><input class=check type=checkbox data-id=${x.id} data-k=textbook ${z.textbook?'checked':''}></td>`;rows.appendChild(tr)});stats()}
-rows.addEventListener('change',e=>{if(!e.target.matches('.check'))return;let z=s(e.target.dataset.id);z[e.target.dataset.k]=e.target.checked;save();render()});
+const KEY='cpimDashboardV2';
+const GOAL_DATE='2026-11-01';
+let db={state:{},study:{},startDate:null};
+try{const x=JSON.parse(localStorage.getItem(KEY)||'null');if(x)db=x}catch(e){}
+if(!db.state)db.state={}; if(!db.study)db.study={};
+function todayISO(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
+if(!db.startDate)db.startDate=todayISO();
+function save(){localStorage.setItem(KEY,JSON.stringify(db))}
+function item(id){if(!db.state[id])db.state[id]={lecture:false,summary:false,textbook:false};return db.state[id]}
+function fmt(m){m=Math.max(0,Math.round(m));const h=Math.floor(m/60),r=m%60;return h?`${h}시간 ${r}분`:`${r}분`}
+function dateOnly(s){const [y,m,d]=s.split('-').map(Number);return new Date(Date.UTC(y,m-1,d))}
+function diffDays(a,b){return Math.ceil((dateOnly(b)-dateOnly(a))/86400000)}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+function calcDday(){const d=diffDays(todayISO(),GOAL_DATE);dday.textContent=d>0?`D-${d}`:d===0?'D-DAY':`D+${Math.abs(d)}`}
+function studyStats(){
+  const t=todayISO(), today=Number(db.study[t]||0);studyMinutes.value=today;todayStudy.textContent=fmt(today);
+  let sum=0;const now=dateOnly(t);for(let i=0;i<7;i++){const d=new Date(now);d.setUTCDate(d.getUTCDate()-i);const k=d.toISOString().slice(0,10);sum+=Number(db.study[k]||0)}
+  weekStudy.textContent=`최근 7일 ${fmt(sum)}`;
+}
+function stats(){
+  let l=0,sm=0,b=0,min=0,total=courses.reduce((a,x)=>a+x.minutes,0);
+  courses.forEach(x=>{const z=item(x.id);if(z.lecture){l++;min+=x.minutes}if(z.summary)sm++;if(z.textbook)b++});
+  const p=n=>n/courses.length*100, timeP=min/total*100, overallP=(p(l)+p(sm)+p(b))/3;
+  overall.textContent=overallP.toFixed(1)+'%';overallBar.style.width=overallP+'%';
+  lectureCount.textContent=`${l} / ${courses.length}`;lecturePct.textContent=p(l).toFixed(1)+'%';lectureBar.style.width=p(l)+'%';
+  timeCount.textContent=fmt(min);timePct.textContent=`총 ${fmt(total)} 중 ${timeP.toFixed(1)}%`;timeBar.style.width=timeP+'%';
+  summaryCount.textContent=`${sm} / ${courses.length}`;summaryPct.textContent=p(sm).toFixed(1)+'%';summaryBar.style.width=p(sm)+'%';
+  textbookCount.textContent=`${b} / ${courses.length}`;textbookPct.textContent=p(b).toFixed(1)+'%';textbookBar.style.width=p(b)+'%';
+
+  const totalPlan=Math.max(1,diffDays(db.startDate,GOAL_DATE));
+  const elapsed=clamp(diffDays(db.startDate,todayISO()),0,totalPlan);
+  const goalP=clamp(elapsed/totalPlan*100,0,100);
+  actualPace.textContent=timeP.toFixed(1)+'%';goalPace.textContent=goalP.toFixed(1)+'%';
+  actualMeter.style.width=timeP+'%';goalMarker.style.left=goalP+'%';
+  const gap=timeP-goalP;gapMetric.textContent=(gap>=0?'+':'')+gap.toFixed(1)+'%p';
+  gapMetric.className='mnum '+(gap>=0?'positive':'negative');
+  gapText.textContent=gap>=0?'목표보다 앞서고 있습니다':'목표보다 뒤처져 있습니다';
+  const remain=Math.max(0,total-min), days=Math.max(1,diffDays(todayISO(),GOAL_DATE)), rl=courses.length-l;
+  remainTime.textContent=fmt(remain);dailyNeed.textContent=`하루 평균 ${Math.ceil(remain/days)}분 필요`;
+  remainLectures.textContent=`${rl}강`;weeklyNeed.textContent=`주당 약 ${(rl/(days/7)).toFixed(1)}강 필요`;
+}
+function render(){
+  const qq=q.value.toLowerCase().trim(),cc=cat.value,ss=st.value;rows.innerHTML='';
+  courses.filter(x=>{const z=item(x.id);let ok=!qq||x.title.toLowerCase().includes(qq);ok=ok&&(cc==='all'||x.category===cc);if(ss==='incomplete')ok=ok&&!z.lecture;if(ss==='lecture')ok=ok&&z.lecture;if(ss==='all3')ok=ok&&z.lecture&&z.summary&&z.textbook;return ok})
+  .forEach(x=>{const z=item(x.id),tr=document.createElement('tr');if(z.lecture&&z.summary&&z.textbook)tr.className='done';tr.innerHTML=`<td class=c>${x.id}</td><td>${x.category}</td><td>${x.title}</td><td class=c>${fmt(x.minutes)}</td>
+  <td class=c><input class=check type=checkbox data-id=${x.id} data-k=lecture ${z.lecture?'checked':''}></td>
+  <td class=c><input class=check type=checkbox data-id=${x.id} data-k=summary ${z.summary?'checked':''}></td>
+  <td class=c><input class=check type=checkbox data-id=${x.id} data-k=textbook ${z.textbook?'checked':''}></td>`;rows.appendChild(tr)});
+  calcDday();stats();studyStats();
+}
+rows.addEventListener('change',e=>{if(!e.target.matches('.check'))return;item(e.target.dataset.id)[e.target.dataset.k]=e.target.checked;save();render()});
 q.addEventListener('input',render);cat.addEventListener('change',render);st.addEventListener('change',render);
-reset.onclick=()=>{if(confirm('모든 체크를 초기화할까요?')){state={};save();render()}};
-backup.onclick=()=>{let blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='cpim-study-backup.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500)};
-restore.onclick=()=>file.click();file.onchange=()=>{let f=file.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{state=JSON.parse(r.result);save();render();alert('백업을 불러왔습니다.')}catch(e){alert('올바른 백업 파일이 아닙니다.')}};r.readAsText(f);file.value=''};
+saveStudy.onclick=()=>{const v=clamp(Number(studyMinutes.value)||0,0,1440);db.study[todayISO()]=v;save();studyStats()};
+reset.onclick=()=>{if(confirm('모든 체크와 공부시간 기록을 초기화할까요?')){db={state:{},study:{},startDate:todayISO()};save();render()}};
+backup.onclick=()=>{const blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='cpim-dashboard-backup.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500)};
+restore.onclick=()=>file.click();file.onchange=()=>{const f=file.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{db=JSON.parse(r.result);if(!db.state)db.state={};if(!db.study)db.study={};if(!db.startDate)db.startDate=todayISO();save();render();alert('백업을 불러왔습니다.')}catch(e){alert('올바른 백업 파일이 아닙니다.')}};r.readAsText(f);file.value=''};
 render();
-</script></body></html>
+</script>
+</body>
+</html>
